@@ -1,0 +1,28 @@
+{
+  "name": "@govbiz/auth",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./middleware": "./src/middleware.ts",
+    "./providers": "./src/providers.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next-auth": "5.0.0-beta.25",
+    "@auth/prisma-adapter": "^2.7.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@govbiz/tsconfig": "workspace:*",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.7.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "@types/react": "^19.0.0"
+  }
+}

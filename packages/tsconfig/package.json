@@ -1,0 +1,12 @@
+{
+  "name": "@govbiz/tsconfig",
+  "version": "1.0.0",
+  "description": "Shared TypeScript configuration for the govbiz-ax monorepo",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "library.json"
+  ]
+}

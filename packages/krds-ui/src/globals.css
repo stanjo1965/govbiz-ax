@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #E8F0FE;
+  --color-primary-100: #C4D9FC;
+  --color-primary-200: #9BBFF9;
+  --color-primary-300: #6FA2F5;
+  --color-primary-400: #4A8AF0;
+  --color-primary-500: #1A6DE0;
+  --color-primary-600: #1459B8;
+  --color-primary-700: #0F4690;
+  --color-primary-800: #0A3368;
+  --color-primary-900: #062040;
+
+  --color-gray-50: #F8F9FA;
+  --color-gray-100: #F1F3F5;
+  --color-gray-200: #E9ECEF;
+  --color-gray-300: #DEE2E6;
+  --color-gray-400: #CED4DA;
+  --color-gray-500: #ADB5BD;
+  --color-gray-600: #868E96;
+  --color-gray-700: #495057;
+  --color-gray-800: #343A40;
+  --color-gray-900: #212529;
+
+  --color-success: #2E7D32;
+  --color-warning: #F57F17;
+  --color-error: #D32F2F;
+  --color-info: #1565C0;
+
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  body {
+    @apply bg-white text-gray-900 font-sans antialiased;
+  }
+}
