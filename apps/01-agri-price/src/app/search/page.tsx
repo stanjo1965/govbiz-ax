@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, MapPin, TrendingDown, TrendingUp } from 'lucide-react';
+import { Search, MapPin, TrendingDown, TrendingUp, X, Store, Clock } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -29,6 +29,7 @@ const CATEGORIES = ['전체', '곡류', '엽경채류', '양채류', '과일류'
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const filteredProducts = SAMPLE_PRODUCTS.filter((p) => {
     const matchesQuery = !query || p.name.includes(query);
@@ -82,9 +83,10 @@ export default function SearchPage() {
 
         <div className="space-y-3">
           {filteredProducts.map((product) => (
-            <div
+            <button
               key={product.id}
-              className="bg-white rounded-lg border border-gray-100 p-4 hover:shadow-sm transition-shadow"
+              onClick={() => setSelectedProduct(product)}
+              className="w-full text-left bg-white rounded-lg border border-gray-100 p-4 hover:shadow-sm hover:border-primary-200 transition-all"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -120,10 +122,71 @@ export default function SearchPage() {
                 </div>
                 <span className="text-xs text-gray-400">{product.updatedAt}</span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </main>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">{selectedProduct.name} 상세 정보</h2>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">분류</span>
+                <span className="text-sm font-medium text-gray-900">{selectedProduct.category}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">현재 가격</span>
+                <span className="text-2xl font-bold text-primary-600">
+                  {selectedProduct.price.toLocaleString()}원
+                  <span className="text-sm font-normal text-gray-400 ml-1">/ {selectedProduct.unit}</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">가격 변동</span>
+                <span className={`text-sm font-semibold ${selectedProduct.priceChange < 0 ? 'text-blue-600' : 'text-red-500'}`}>
+                  {selectedProduct.priceChange < 0 ? '▼' : '▲'} {Math.abs(selectedProduct.priceChange)}% (전주 대비)
+                </span>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Store className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-700">{selectedProduct.store}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-700">{selectedProduct.location}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-700">업데이트: {selectedProduct.updatedAt}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                닫기
+              </button>
+              <button className="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
+                장보기 목록에 추가
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

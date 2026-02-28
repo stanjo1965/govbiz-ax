@@ -116,9 +116,9 @@ export default function HomePage() {
             <span>국가유산청</span>
           </div>
           <div className="flex items-center gap-3 text-gray-400">
-            <span>로그인</span>
+            <Link href="/chat" className="hover:text-white transition-colors">로그인</Link>
             <span>|</span>
-            <span>회원가입</span>
+            <Link href="/chat" className="hover:text-white transition-colors">회원가입</Link>
           </div>
         </div>
       </div>

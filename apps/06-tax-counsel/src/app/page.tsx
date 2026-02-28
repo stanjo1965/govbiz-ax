@@ -20,7 +20,7 @@ const services = [
     color: 'bg-blue-50 text-blue-600',
   },
   {
-    href: '#',
+    href: '/chat',
     icon: Phone,
     title: '전화상담',
     description: '국세상담센터 126 전화상담 안내',

@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Eye,
@@ -142,6 +145,12 @@ function getSeverityLabel(severity: string) {
 }
 
 export default function DashboardPage() {
+  const [acknowledgedIds, setAcknowledgedIds] = useState<Set<number>>(new Set());
+
+  const handleAcknowledge = (id: number) => {
+    setAcknowledgedIds((prev) => new Set([...prev, id]));
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -279,27 +288,43 @@ export default function DashboardPage() {
               <span className="text-xs text-gray-400">금일 {alerts.length}건</span>
             </div>
             <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`border-l-4 rounded-lg p-4 ${getSeverityColor(alert.severity)}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <alert.icon className="w-4 h-4 text-gray-700 shrink-0" />
-                      <span className="text-sm font-semibold text-gray-900">{alert.type}</span>
+              {alerts.map((alert) => {
+                const isAcknowledged = acknowledgedIds.has(alert.id);
+                return (
+                  <div
+                    key={alert.id}
+                    className={`border-l-4 rounded-lg p-4 transition-opacity ${getSeverityColor(alert.severity)} ${isAcknowledged ? 'opacity-50' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <alert.icon className="w-4 h-4 text-gray-700 shrink-0" />
+                        <span className="text-sm font-semibold text-gray-900">{alert.type}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getSeverityBadge(alert.severity)}`}>
+                          {getSeverityLabel(alert.severity)}
+                        </span>
+                        <span className="text-xs text-gray-500">{alert.time}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getSeverityBadge(alert.severity)}`}>
-                        {getSeverityLabel(alert.severity)}
-                      </span>
-                      <span className="text-xs text-gray-500">{alert.time}</span>
+                    <p className="text-xs text-gray-600 mt-1.5">{alert.description}</p>
+                    <p className="text-xs text-gray-500 mt-1">{alert.location}</p>
+                    <div className="mt-2 text-right">
+                      <button
+                        onClick={() => handleAcknowledge(alert.id)}
+                        disabled={isAcknowledged}
+                        className={`text-xs font-medium px-2.5 py-1 rounded transition-colors ${
+                          isAcknowledged
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-blue-600 hover:bg-blue-100'
+                        }`}
+                      >
+                        {isAcknowledged ? '확인됨' : '확인'}
+                      </button>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1.5">{alert.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">{alert.location}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  CheckCircle,
 } from 'lucide-react';
 
 interface Mission {
@@ -35,7 +36,7 @@ interface Mission {
   description: string;
 }
 
-const missions: Mission[] = [
+const initialMissions: Mission[] = [
   {
     id: 1,
     name: '인천항 정기순찰 A-12',
@@ -145,16 +146,56 @@ function getStatusDot(status: string) {
 }
 
 export default function MissionsPage() {
+  const [missionList, setMissionList] = useState<Mission[]>(initialMissions);
   const [expandedMission, setExpandedMission] = useState<number | null>(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [toast, setToast] = useState('');
 
-  const filteredMissions = missions.filter(
+  // Form state
+  const [newName, setNewName] = useState('');
+  const [newType, setNewType] = useState<'patrol' | 'search' | 'rescue'>('patrol');
+  const [newDrone, setNewDrone] = useState('드론 #1');
+  const [newArea, setNewArea] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  const handleCreateMission = () => {
+    if (!newName.trim()) return;
+    const typeLabelMap = { patrol: '순찰', search: '수색', rescue: '구조' };
+    const newMission: Mission = {
+      id: Date.now(),
+      name: newName,
+      type: newType,
+      typeLabel: typeLabelMap[newType],
+      droneAssigned: newDrone,
+      status: 'standby',
+      statusLabel: '대기 중',
+      startTime: '미정',
+      area: newArea || '미정',
+      objectives: ['임무 목표 검토 필요'],
+      personnel: [],
+      description: newDesc || '임무 설명 없음',
+    };
+    setMissionList((prev) => [newMission, ...prev]);
+    setShowCreateModal(false);
+    setNewName('');
+    setNewArea('');
+    setNewDesc('');
+    setNewType('patrol');
+    showToast(`임무 "${newMission.name}"이(가) 생성되었습니다.`);
+  };
+
+  const filteredMissions = missionList.filter(
     (m) => statusFilter === 'all' || m.status === statusFilter
   );
 
-  const activeMissions = missions.filter((m) => m.status === 'active').length;
-  const standbyMissions = missions.filter((m) => m.status === 'standby').length;
+  const activeMissions = missionList.filter((m) => m.status === 'active').length;
+  const standbyMissions = missionList.filter((m) => m.status === 'standby').length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -208,7 +249,7 @@ export default function MissionsPage() {
               <Radio className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{missions.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{missionList.length}</p>
               <p className="text-xs text-gray-500">전체 임무</p>
             </div>
           </div>
@@ -317,16 +358,20 @@ export default function MissionsPage() {
                         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                           <Users className="w-3.5 h-3.5 inline mr-1" />투입 인원
                         </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {mission.personnel.map((person, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-700"
-                            >
-                              {person}
-                            </span>
-                          ))}
-                        </div>
+                        {mission.personnel.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {mission.personnel.map((person, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-700"
+                              >
+                                {person}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400">배정 없음</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -344,6 +389,14 @@ export default function MissionsPage() {
         )}
       </main>
 
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg z-50 text-sm">
+          <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+          {toast}
+        </div>
+      )}
+
       {/* Create Mission Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -359,9 +412,11 @@ export default function MissionsPage() {
             </div>
             <div className="px-6 py-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">임무명</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">임무명 *</label>
                 <input
                   type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
                   placeholder="임무명을 입력하세요"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
@@ -369,7 +424,11 @@ export default function MissionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">임무 유형</label>
-                  <select className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <select
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value as 'patrol' | 'search' | 'rescue')}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
                     <option value="patrol">순찰</option>
                     <option value="search">수색</option>
                     <option value="rescue">구조</option>
@@ -377,7 +436,11 @@ export default function MissionsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">배정 드론</label>
-                  <select className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <select
+                    value={newDrone}
+                    onChange={(e) => setNewDrone(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
                     <option>드론 #1</option>
                     <option>드론 #2</option>
                     <option>드론 #3</option>
@@ -391,6 +454,8 @@ export default function MissionsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">작전 해역</label>
                 <input
                   type="text"
+                  value={newArea}
+                  onChange={(e) => setNewArea(e.target.value)}
                   placeholder="작전 해역을 입력하세요"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
@@ -398,6 +463,8 @@ export default function MissionsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">임무 설명</label>
                 <textarea
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
                   rows={3}
                   placeholder="임무 목표 및 상세 내용을 입력하세요"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
@@ -412,8 +479,13 @@ export default function MissionsPage() {
                 취소
               </button>
               <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors"
+                onClick={handleCreateMission}
+                disabled={!newName.trim()}
+                className={`px-6 py-2 text-white text-sm font-medium rounded-lg transition-colors ${
+                  newName.trim()
+                    ? 'bg-primary-500 hover:bg-primary-600'
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
               >
                 임무 생성
               </button>

@@ -102,8 +102,12 @@ export default function MonitoringPage() {
   const [selectedDrone, setSelectedDrone] = useState(drones[0].id);
   const [isPlaying, setIsPlaying] = useState(true);
   const [selectedDetection, setSelectedDetection] = useState<number | null>(null);
+  const [activeFilter, setActiveFilter] = useState('전체');
 
   const activeDrone = drones.find((d) => d.id === selectedDrone);
+  const filteredDetections = activeFilter === '전체'
+    ? detections
+    : detections.filter((d) => d.type === activeFilter);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -261,7 +265,12 @@ export default function MonitoringPage() {
             {['전체', '선박', '사람', '부유물'].map((filter) => (
               <button
                 key={filter}
-                className="text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                onClick={() => setActiveFilter(filter)}
+                className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                  activeFilter === filter
+                    ? 'bg-cyan-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
               >
                 {filter}
               </button>
@@ -270,7 +279,7 @@ export default function MonitoringPage() {
 
           {/* Detection List */}
           <div className="flex-1 overflow-y-auto">
-            {detections.map((det) => (
+            {filteredDetections.map((det) => (
               <button
                 key={det.id}
                 onClick={() => setSelectedDetection(selectedDetection === det.id ? null : det.id)}

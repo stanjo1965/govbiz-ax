@@ -13,6 +13,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 
 type Verdict = 'true' | 'false' | 'uncertain';
@@ -97,6 +98,8 @@ const sampleResults: FactCheckResult[] = [
   },
 ];
 
+const quickTags = ['비타민 효능', '건강기능식품', '화장품 성분', '의약품 부작용', '식품 안전'];
+
 function getVerdictInfo(verdict: Verdict) {
   switch (verdict) {
     case 'true':
@@ -131,6 +134,25 @@ function getVerdictInfo(verdict: Verdict) {
 
 export default function FactCheckPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [verifyDone, setVerifyDone] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState('');
+  const [feedback, setFeedback] = useState<Record<number, 'up' | 'down' | null>>({});
+
+  const handleVerify = () => {
+    if (!searchQuery.trim()) return;
+    setVerifying(true);
+    setVerifyDone(false);
+    setTimeout(() => {
+      setVerifying(false);
+      setVerifyDone(true);
+      setVerifyMsg(searchQuery);
+    }, 1800);
+  };
+
+  const handleFeedback = (id: number, type: 'up' | 'down') => {
+    setFeedback((prev) => ({ ...prev, [id]: prev[id] === type ? null : type }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,21 +187,51 @@ export default function FactCheckPage() {
                 placeholder="검증하고 싶은 주장을 입력하세요 (예: 콜라겐 음료가 피부 주름을 개선한다)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <button className="bg-blue-600 text-white px-5 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors">
-              검증
+            <button
+              onClick={handleVerify}
+              disabled={verifying || !searchQuery.trim()}
+              className={`px-5 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 ${
+                verifying || !searchQuery.trim()
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  검증 중
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4" />
+                  검증
+                </>
+              )}
             </button>
           </div>
+
+          {/* Verify result notice */}
+          {verifyDone && verifyMsg && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">&ldquo;{verifyMsg}&rdquo;</span>에 대한 유사 팩트체크 결과를 아래에서 확인하세요.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Quick tags */}
         <div className="flex flex-wrap gap-2 mb-6">
           <span className="text-sm text-gray-500 mr-1">자주 검증되는 주제:</span>
-          {['비타민 효능', '건강기능식품', '화장품 성분', '의약품 부작용', '식품 안전'].map((tag) => (
+          {quickTags.map((tag) => (
             <button
               key={tag}
+              onClick={() => setSearchQuery(tag)}
               className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full hover:border-blue-300 hover:text-blue-600 transition-colors"
             >
               {tag}
@@ -259,12 +311,27 @@ export default function FactCheckPage() {
                 {/* Feedback */}
                 <div className="flex items-center justify-end gap-3 mt-3 pt-3 border-t border-gray-100">
                   <span className="text-xs text-gray-400">이 결과가 도움이 되었나요?</span>
-                  <button className="text-gray-400 hover:text-green-600 transition-colors">
+                  <button
+                    onClick={() => handleFeedback(result.id, 'up')}
+                    className={`transition-colors ${
+                      feedback[result.id] === 'up' ? 'text-green-600' : 'text-gray-400 hover:text-green-600'
+                    }`}
+                    title="도움이 됩니다"
+                  >
                     <ThumbsUp className="w-4 h-4" />
                   </button>
-                  <button className="text-gray-400 hover:text-red-600 transition-colors">
+                  <button
+                    onClick={() => handleFeedback(result.id, 'down')}
+                    className={`transition-colors ${
+                      feedback[result.id] === 'down' ? 'text-red-600' : 'text-gray-400 hover:text-red-600'
+                    }`}
+                    title="도움이 안 됩니다"
+                  >
                     <ThumbsDown className="w-4 h-4" />
                   </button>
+                  {feedback[result.id] && (
+                    <span className="text-xs text-gray-400">피드백 감사합니다!</span>
+                  )}
                 </div>
               </div>
             );

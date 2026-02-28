@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Shield, Search, Car, MapPin, Calendar, CreditCard, AlertTriangle, CheckCircle, Clock, Ban } from 'lucide-react';
+import { ArrowLeft, Shield, Search, Car, MapPin, Calendar, CreditCard, AlertTriangle, CheckCircle, Clock, Ban, X } from 'lucide-react';
 
 interface Violation {
   id: string;
@@ -77,6 +77,23 @@ export default function TrafficPage() {
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [violations, setViolations] = useState<Violation[]>([]);
+  const [payingViolation, setPayingViolation] = useState<Violation | null>(null);
+  const [paidIds, setPaidIds] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  const handlePay = (violation: Violation) => {
+    setPaidIds((prev) => new Set([...prev, violation.id]));
+    setViolations((prev) =>
+      prev.map((v) => v.id === violation.id ? { ...v, status: '납부완료' as const } : v)
+    );
+    setPayingViolation(null);
+    showToast(`${violation.type} 과태료 ${formatCurrency(violation.fineAmount)} 납부가 완료되었습니다.`);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,7 +239,10 @@ export default function TrafficPage() {
                           {formatCurrency(violation.fineAmount)}
                         </p>
                         {violation.status === '미납' && (
-                          <button className="mt-2 inline-flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors">
+                          <button
+                            onClick={() => setPayingViolation(violation)}
+                            className="mt-2 inline-flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors"
+                          >
                             <CreditCard className="w-3 h-3" />
                             납부하기
                           </button>
@@ -246,6 +266,60 @@ export default function TrafficPage() {
           </div>
         )}
       </div>
+
+      {/* Payment Confirmation Modal */}
+      {payingViolation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-base font-bold text-gray-900">과태료 납부</h2>
+              <button onClick={() => setPayingViolation(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                <p className="text-sm font-semibold text-red-700 mb-1">{payingViolation.type}</p>
+                <p className="text-xs text-red-500">{payingViolation.location}</p>
+                <p className="text-xs text-red-500 mt-1 font-mono">{payingViolation.id}</p>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-sm text-gray-500">위반일</span>
+                <span className="text-sm font-medium text-gray-900">{payingViolation.date}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">납부금액</span>
+                <span className="text-xl font-bold text-red-600">{formatCurrency(payingViolation.fineAmount)}</span>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-600">
+                카드결제, 계좌이체, 간편결제 등 다양한 방법으로 납부할 수 있습니다.
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setPayingViolation(null)}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => handlePay(payingViolation)}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+              >
+                납부 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

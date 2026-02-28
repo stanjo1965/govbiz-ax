@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Shield, Upload, Search, MapPin, Calendar, Tag, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Shield, Upload, Search, MapPin, Calendar, Tag, CheckCircle, Clock, X } from 'lucide-react';
 
 type Category = '전체' | '전자기기' | '지갑/가방' | '귀금속' | '의류' | '기타';
 
@@ -102,12 +102,30 @@ function getStatusIcon(status: FoundItem['status']) {
 export default function LostFoundPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('전체');
   const [searchQuery, setSearchQuery] = useState('');
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredItems = sampleItems.filter((item) => {
     const matchCategory = selectedCategory === '전체' || item.category === selectedCategory;
     const matchQuery = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchQuery;
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleClearPreview = () => {
+    setPreview(null);
+    setFileName('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -132,10 +150,40 @@ export default function LostFoundPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">분실물 이미지 업로드</h2>
           <p className="text-sm text-gray-500 mb-6">분실한 물품의 사진을 업로드하면 AI가 유사한 습득물을 찾아드립니다.</p>
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-navy-400 transition-colors cursor-pointer">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-sm font-medium text-gray-700 mb-1">클릭하여 이미지를 업로드하세요</p>
-            <p className="text-xs text-gray-400">JPG, PNG, WEBP (최대 10MB)</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-navy-400 transition-colors cursor-pointer"
+          >
+            {preview ? (
+              <div className="relative inline-block">
+                <img
+                  src={preview}
+                  alt="미리보기"
+                  className="max-h-48 max-w-full mx-auto rounded-lg object-contain"
+                />
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleClearPreview(); }}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+                <p className="text-xs text-gray-500 mt-3">{fileName}</p>
+                <p className="text-xs text-navy-500 mt-1 font-medium">클릭하여 다른 이미지로 변경</p>
+              </div>
+            ) : (
+              <>
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm font-medium text-gray-700 mb-1">클릭하여 이미지를 업로드하세요</p>
+                <p className="text-xs text-gray-400">JPG, PNG, WEBP (최대 10MB)</p>
+              </>
+            )}
           </div>
         </div>
 

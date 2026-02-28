@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, ArrowLeft, Building2, FileText, Scale, BookOpen, MessageSquare } from 'lucide-react';
+import { Search, ArrowLeft, Building2, FileText, Scale, BookOpen, MessageSquare, X } from 'lucide-react';
 
 type CategoryKey = '세법' | '판례' | '예규' | '해석';
 
@@ -107,6 +107,7 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('세법');
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<typeof sampleResults['세법'][0] | null>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,7 +209,10 @@ export default function SearchPage() {
                 <p className="text-sm text-gray-600 leading-relaxed mb-3">{result.summary}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">{result.date}</span>
-                  <button className="text-sm text-primary-500 hover:text-primary-600 font-medium">
+                  <button
+                    onClick={() => setSelectedResult(result)}
+                    className="text-sm text-primary-500 hover:text-primary-600 font-medium"
+                  >
                     상세보기
                   </button>
                 </div>
@@ -217,6 +221,53 @@ export default function SearchPage() {
           </div>
         </div>
       </section>
+
+      {/* Result Detail Modal */}
+      {selectedResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary-50 text-primary-600">
+                  {activeCategory}
+                </span>
+                <span className="text-sm font-mono text-gray-500">{selectedResult.reference}</span>
+              </div>
+              <button onClick={() => setSelectedResult(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <h3 className="text-lg font-bold text-gray-900">{selectedResult.title}</h3>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${selectedResult.relevance}%` }} />
+                </div>
+                <span className="text-xs text-gray-500 whitespace-nowrap">관련도 {selectedResult.relevance}%</span>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-sm font-medium text-gray-500 mb-2">조문 내용</p>
+                <p className="text-sm text-gray-700 leading-relaxed">{selectedResult.summary}</p>
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>기준일: {selectedResult.date}</span>
+                <span>출처: 국세청 법령정보</span>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-200">
+              <button onClick={() => setSelectedResult(null)} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                닫기
+              </button>
+              <a
+                href="/chat"
+                className="flex-1 px-4 py-2.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors text-center"
+              >
+                AI 상담 연결
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Briefcase,
@@ -8,6 +9,8 @@ import {
   Download,
   Search,
   Filter,
+  X,
+  Check,
 } from 'lucide-react';
 
 const sampleReports = [
@@ -85,7 +88,22 @@ const sampleReports = [
   },
 ];
 
+const analysisTypes = [
+  '전체', '상권입지분석', '수요예측', '고객특성', '배달최적화',
+  '메뉴트렌드', '경영진단', '생존예측', '재무진단', '경영전략',
+];
+
 export default function ReportsPage() {
+  const [query, setQuery] = useState('');
+  const [filterType, setFilterType] = useState('전체');
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const filteredReports = sampleReports.filter((r) => {
+    const matchQuery = !query || r.title.includes(query) || r.businessName.includes(query);
+    const matchType = filterType === '전체' || r.analysisType === filterType;
+    return matchQuery && matchType;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -119,14 +137,51 @@ export default function ReportsPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="보고서 검색..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-            <Filter className="w-4 h-4" />
-            필터
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 bg-white border rounded-lg text-sm transition-colors ${
+                filterOpen || filterType !== '전체'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              {filterType === '전체' ? '필터' : filterType}
+            </button>
+            {filterOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10">
+                {analysisTypes.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => { setFilterType(type); setFilterOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between transition-colors ${
+                      filterType === type
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {type}
+                    {filterType === type && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Reports List */}
@@ -141,7 +196,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="divide-y divide-gray-50">
-            {sampleReports.map((report) => (
+            {filteredReports.map((report) => (
               <div
                 key={report.id}
                 className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
@@ -214,7 +269,9 @@ export default function ReportsPage() {
         {/* Pagination hint */}
         <div className="flex justify-center mt-6">
           <p className="text-sm text-gray-400">
-            총 {sampleReports.length}건의 보고서
+            {filteredReports.length !== sampleReports.length
+              ? `${filteredReports.length}건 검색됨 (전체 ${sampleReports.length}건)`
+              : `총 ${sampleReports.length}건의 보고서`}
           </p>
         </div>
       </main>
