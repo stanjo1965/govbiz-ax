@@ -14,6 +14,9 @@ import {
   Briefcase,
   Users,
   Heart,
+  RefreshCw,
+  Database,
+  Sparkles,
 } from 'lucide-react';
 
 type Gender = 'male' | 'female';
@@ -107,6 +110,53 @@ function analyzeCategories(
   ];
 }
 
+// 마이데이터 연동 시뮬레이션: 나이·직업 기반 현실적 보험 데이터 생성
+function simulateMyDataFetch(
+  age: number,
+  occupation: Occupation
+): { insurance: Record<string, boolean>; premiums: Record<string, string> } {
+  const insurance: Record<string, boolean> = {};
+  const premiums: Record<string, string> = {};
+
+  // 실손의료보험: 60세 미만 대부분 가입
+  if (age < 60) {
+    insurance.medical = true;
+    premiums.medical = age < 40 ? '35000' : age < 55 ? '68000' : '120000';
+  }
+  // 생명보험: 30대 이상 직장인·자영업자 다수 가입
+  if (age >= 30 && (occupation === '직장인' || occupation === '자영업자')) {
+    insurance.life = true;
+    premiums.life = '85000';
+  }
+  // 종신보험: 40대 이상 가입률 높음
+  if (age >= 40 && occupation === '직장인') {
+    insurance.whole = true;
+    premiums.whole = '142000';
+  }
+  // 암보험: 40대 이상 가입 권장
+  if (age >= 40) {
+    insurance.cancer = true;
+    premiums.cancer = '32000';
+  }
+  // 자동차보험: 직장인·자영업자 차량 보유 가정
+  if (occupation === '직장인' || occupation === '자영업자') {
+    insurance.car = true;
+    premiums.car = '58000';
+  }
+  // 화재보험: 자영업자 사업장 보장
+  if (occupation === '자영업자') {
+    insurance.fire = true;
+    premiums.fire = '22000';
+  }
+  // 연금보험: 45세 이상 노후 준비
+  if (age >= 45) {
+    insurance.pension = true;
+    premiums.pension = '200000';
+  }
+
+  return { insurance, premiums };
+}
+
 export default function DiagnosisPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [age, setAge] = useState(35);
@@ -115,6 +165,20 @@ export default function DiagnosisPage() {
   const [dependents, setDependents] = useState<string[]>([]);
   const [hasInsurance, setHasInsurance] = useState<Record<string, boolean>>({});
   const [premiums, setPremiums] = useState<Record<string, string>>({});
+  const [autoFetching, setAutoFetching] = useState(false);
+  const [autoFetched, setAutoFetched] = useState(false);
+  const [autoFetchedKeys, setAutoFetchedKeys] = useState<Set<string>>(new Set());
+
+  const handleAutoFetch = async () => {
+    setAutoFetching(true);
+    await new Promise((r) => setTimeout(r, 1800));
+    const { insurance, premiums: fetchedPremiums } = simulateMyDataFetch(age, occupation);
+    setHasInsurance(insurance);
+    setPremiums(fetchedPremiums);
+    setAutoFetchedKeys(new Set(Object.keys(insurance)));
+    setAutoFetched(true);
+    setAutoFetching(false);
+  };
 
   const toggleDependent = (val: string) => {
     setDependents((prev) =>
@@ -301,6 +365,71 @@ export default function DiagnosisPage() {
               <p className="text-sm text-gray-500">현재 가입 중인 보험을 모두 선택하고 월 보험료를 입력해 주세요.</p>
             </div>
 
+            {/* 마이데이터 자동조회 배너 */}
+            <div className={`rounded-xl border p-4 transition-all ${autoFetched ? 'bg-blue-50 border-blue-200' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Database className="w-4 h-4 text-blue-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 flex items-center gap-1.5">
+                      금융감독원 마이데이터 연동
+                      <span className="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded font-medium">BETA</span>
+                    </p>
+                    {autoFetched ? (
+                      <p className="text-xs text-blue-700 mt-0.5 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        조회 완료 — 가입 보험 {Object.values(hasInsurance).filter(Boolean).length}건 확인됨. 내역을 직접 수정할 수 있습니다.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-blue-700 mt-0.5">
+                        내 보험 가입 현황을 금융마이데이터로 자동으로 불러옵니다.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={handleAutoFetch}
+                  disabled={autoFetching}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    autoFetching
+                      ? 'bg-blue-200 text-blue-500 cursor-not-allowed'
+                      : autoFetched
+                      ? 'bg-white border border-blue-300 text-blue-700 hover:bg-blue-50'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                  }`}
+                >
+                  {autoFetching ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      조회 중…
+                    </>
+                  ) : autoFetched ? (
+                    <>
+                      <RefreshCw className="w-3 h-3" />
+                      재조회
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      자동 조회
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* 조회 중 프로그레스 */}
+              {autoFetching && (
+                <div className="mt-3">
+                  <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '70%' }} />
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1.5">금융감독원 보험다모아에서 가입 내역 조회 중…</p>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-3">
               {insuranceTypes.map((ins) => (
                 <div
@@ -322,7 +451,15 @@ export default function DiagnosisPage() {
                         {hasInsurance[ins.key] && <CheckCircle className="w-3 h-3 text-white" />}
                       </button>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{ins.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-900">{ins.label}</p>
+                          {autoFetchedKeys.has(ins.key) && hasInsurance[ins.key] && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5">
+                              <Database className="w-2.5 h-2.5" />
+                              마이데이터
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">{ins.desc}</p>
                       </div>
                     </div>
