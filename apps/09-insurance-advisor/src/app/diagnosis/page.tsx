@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import {
@@ -167,7 +169,7 @@ export default function DiagnosisPage() {
   const [premiums, setPremiums] = useState<Record<string, string>>({});
   const [autoFetching, setAutoFetching] = useState(false);
   const [autoFetched, setAutoFetched] = useState(false);
-  const [autoFetchedKeys, setAutoFetchedKeys] = useState<Set<string>>(new Set());
+  const [autoFetchedKeys, setAutoFetchedKeys] = useState<string[]>([]);
 
   const handleAutoFetch = async () => {
     setAutoFetching(true);
@@ -175,7 +177,7 @@ export default function DiagnosisPage() {
     const { insurance, premiums: fetchedPremiums } = simulateMyDataFetch(age, occupation);
     setHasInsurance(insurance);
     setPremiums(fetchedPremiums);
-    setAutoFetchedKeys(new Set(Object.keys(insurance)));
+    setAutoFetchedKeys(Object.keys(insurance));
     setAutoFetched(true);
     setAutoFetching(false);
   };
@@ -453,7 +455,7 @@ export default function DiagnosisPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-gray-900">{ins.label}</p>
-                          {autoFetchedKeys.has(ins.key) && hasInsurance[ins.key] && (
+                          {autoFetchedKeys.includes(ins.key) && hasInsurance[ins.key] && (
                             <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5">
                               <Database className="w-2.5 h-2.5" />
                               마이데이터
