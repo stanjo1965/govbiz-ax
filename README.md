@@ -1,6 +1,6 @@
 # GovBiz AX — 2026 공공AX 프로젝트 모노레포
 
-> 2026년 공공AX(AI 전환) 프로젝트 8개 과제를 위한 Next.js 15 + Turborepo 모노레포
+> 2026년 공공AX(AI 전환) 프로젝트 9개 과제를 위한 Next.js 15 + Turborepo 모노레포
 
 ## 프로젝트 구성
 
@@ -14,7 +14,8 @@ govbiz-ax/
 │   ├── 05-safety-guardian/   # ⑤ 식의약품 안전 지킴이 솔루션         (포트 3005)
 │   ├── 06-tax-counsel/       # ⑥ AI 국세상담 시스템                  (포트 3006)
 │   ├── 07-police-for-all/    # ⑦ 모두의 경찰관                      (포트 3007)
-│   └── 08-permit-diagnosis/  # ⑧ 통합인허가 사전진단 서비스           (포트 3008)
+│   ├── 08-permit-diagnosis/  # ⑧ 통합인허가 사전진단 서비스           (포트 3008)
+│   └── 09-insurance-advisor/ # ⑨ AI 국민보험 포트폴리오 안내          (포트 3009)
 └── packages/
     ├── ai-sdk/               # Vercel AI SDK + Claude 통합 레이어
     ├── auth/                 # next-auth v5 인증 모듈
@@ -73,7 +74,8 @@ pnpm --filter @govbiz/deep-blue-eye dev    # 해상안전 앱
 pnpm --filter @govbiz/safety-guardian dev  # 식의약품 앱
 pnpm --filter @govbiz/tax-counsel dev      # 국세상담 앱
 pnpm --filter @govbiz/police-for-all dev   # 경찰민원 앱
-pnpm --filter @govbiz/permit-diagnosis dev # 인허가 앱
+pnpm --filter @govbiz/permit-diagnosis dev  # 인허가 앱
+pnpm --filter @govbiz/insurance-advisor dev # 국민보험 앱
 ```
 
 ### 5. 빌드
@@ -137,6 +139,13 @@ pnpm --filter @govbiz/agri-price build
 - 용도지역·법령 자동 분석
 - 인허가 절차 체크리스트
 
+### ⑨ AI 국민보험 포트폴리오 안내
+- 보장 공백 AI 진단 (3단계 위자드)
+- 보험 상품 비교 (카테고리·정렬 필터)
+- 실손·생명·자동차·화재 보험금 청구 가이드
+- 납부일·갱신일·만기일 캘린더 관리
+- AI 보험 상담 챗봇 (금융위원회·금융감독원)
+
 ## 공유 패키지
 
 ### `@govbiz/krds-ui`
@@ -148,7 +157,7 @@ pnpm --filter @govbiz/agri-price build
 ### `@govbiz/ai-sdk`
 Claude AI 통합 레이어:
 - `createAIClient()` — Anthropic 클라이언트 팩토리
-- `systemPrompts` — 8개 서비스별 시스템 프롬프트
+- `systemPrompts` — 9개 서비스별 시스템 프롬프트
 
 ### `@govbiz/chat-ui`
 대화형 AI 채팅 컴포넌트:
